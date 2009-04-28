@@ -3,7 +3,7 @@
 - Generate all permutations *
 - Bruteforce: 
    Hash & Compare to target hash
-
+- modification
 
 
 * in CUDA (Parallelise)
