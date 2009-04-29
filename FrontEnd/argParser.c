@@ -23,7 +23,7 @@ int parseArg(int argc, char* argv[]) {
 	
 	int c;
 	//int opterr = 0;
-	while ((c = getopt (argc, argv, "t:s:e:n:v")) != -1) {
+	while ((c = getopt (argc, argv, "t:s:e:l:v")) != -1) {
 		switch (c) {
 			case 't':
 #ifdef DEBUG
@@ -45,8 +45,8 @@ int parseArg(int argc, char* argv[]) {
 				fprintf(stderr,"End Character Set: %s\n",optarg);
 #endif
 				break;
-			case 'v':
-				//	printVersion();
+			case 'l':
+				fprintf(stderr,"String length: %s\n",optarg);
 				break;
 			case '?':
 				if (optopt == 'H' || optopt == 'l' || optopt == 'n') {
