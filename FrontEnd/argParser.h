@@ -7,6 +7,24 @@
  *
  */
 
+#include <iostream>
+#include <string>
+using namespace std;
 
 
-int parseArg(int argc, char* argv[]);
+
+
+#ifndef BASE
+#define BASE
+
+
+class CArguments {
+    string hash;
+	int c;
+public:
+	
+	void printHash();
+	CArguments (int argc, char* argv[]);
+};
+
+#endif

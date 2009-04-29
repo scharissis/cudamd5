@@ -15,13 +15,20 @@
 #include <ctype.h>
 
 
-#define DEBUG 1
 
-
-
-int parseArg(int argc, char* argv[]) {
+void CArguments::printHash() {
 	
-	int c;
+	fprintf(stderr,"Called printHash()\n");		
+	
+}
+
+
+
+CArguments::CArguments (int argc, char* argv[]) {
+	
+	
+	
+	
 	//int opterr = 0;
 	while ((c = getopt (argc, argv, "t:s:e:l:v")) != -1) {
 		switch (c) {
@@ -29,7 +36,7 @@ int parseArg(int argc, char* argv[]) {
 #ifdef DEBUG
 				fprintf(stderr,"Target Hash: %s\n",optarg);
 #endif
-				
+				hash = string(optarg);
 				break;
 			case 'h':
 				//	printUsage();
@@ -62,8 +69,12 @@ int parseArg(int argc, char* argv[]) {
 				abort ();
 		}     
 		
-	
+		
 	}
-
-	return 0;
 }
+
+
+
+
+
+

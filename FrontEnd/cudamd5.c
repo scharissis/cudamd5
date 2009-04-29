@@ -9,14 +9,16 @@
 
 #include "cudamd5.h"
 
-
+#include "argParser.h"
 
 
 int main(int argc, char *argv[]) {
 
 
-	parseArg(argc, argv);
-
+	//parseArg(argc, argv);
+	
+	CArguments args (argc,argv);
+	args.printHash();
 	
 	/*End of program*/
 	return 0;
