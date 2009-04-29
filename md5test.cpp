@@ -16,14 +16,14 @@
 #include <sys/types.h>
 #include <time.h>
 #include <string.h>
+#include <string>
 #include "md5.h"
 
 /* Prints message digest buffer in mdContext as 32 hexadecimal digits.
    Order is from low-order byte to high-order byte of digest.
    Each byte is printed with high-order hexadecimal digit first.
  */
-static void MDPrint (mdContext)
-MD5_CTX *mdContext;
+static void MDPrint (MD5_CTX *mdContext)
 {
   int i;
 
@@ -87,14 +87,14 @@ static void MDTimeTrial ()
    Prints out message digest, a space, the string (in quotes) and a
    carriage return.
  */
-static void MDString (inString)
-char *inString;
+static void MDString (char *inString)
 {
   MD5_CTX mdContext;
   unsigned int len = strlen (inString);
 
   MD5Init (&mdContext);
-  MD5Update (&mdContext, inString, len);
+  unsigned char *uinString = (unsigned char*)inString;
+  MD5Update (&mdContext, uinString, len);
   MD5Final (&mdContext);
   //DEBUG
   //MDPrint (&mdContext);
@@ -105,8 +105,7 @@ char *inString;
    Prints out message digest, a space, the file name, and a carriage
    return.
  */
-static void MDFile (filename)
-char *filename;
+static void MDFile (char *filename)
 {
   FILE *inFile = fopen (filename, "rb");
   MD5_CTX mdContext;
@@ -149,15 +148,15 @@ static void MDTimeTrial2 ()
 {
   MD5_CTX mdContext;
   time_t endTime, startTime;
-  char *filename = "/usr/share/dict/words";
+  std::string filename = "/usr/share/dict/words";
 	
-  FILE *inFile = fopen (filename, "rb");
+  FILE *inFile = fopen (filename.c_str(), "rb");
   int bytes,n;
   char word [42];
   unsigned char data[1024];
 
   if (inFile == NULL) {
-    printf ("%s can't be opened.\n", filename);
+    printf ("%s can't be opened.\n", filename.c_str());
     return;
   }  
   n = 0;
@@ -173,8 +172,10 @@ static void MDTimeTrial2 ()
 
 /* Runs a standard suite of test data.
  */
+
 static void MDTestSuite ()
 {
+/*
   printf ("MD5 test suite results:\n\n");
   MDString ("");
   MDString ("a");
@@ -186,34 +187,9 @@ static void MDTestSuite ()
   MDString
     ("1234567890123456789012345678901234567890\
 1234567890123456789012345678901234567890");
-  /* Contents of file foo are "abc" */
+  // Contents of file foo are "abc" 
   MDFile ("foo");
+*/
 }
 
-int main (argc, argv)
-int argc;
-char *argv[];
-{
-  int i;
 
-  /* For each command line argument in turn:
-  ** filename          -- prints message digest and name of file
-  ** -sstring          -- prints message digest and contents of string
-  ** -t                -- prints time trial statistics for 1M characters
-  ** -x                -- execute a standard suite of test data
-  ** (no args)         -- writes messages digest of stdin onto stdout
-  */
-  if (argc == 1)
-    MDFilter ();
-  else
-    for (i = 1; i < argc; i++)
-      if (argv[i][0] == '-' && argv[i][1] == 's')
-        MDString (argv[i] + 2);
-      else if (strcmp (argv[i], "-t") == 0)
-        MDTimeTrial2 ();
-      else if (strcmp (argv[i], "-x") == 0)
-        MDTestSuite ();
-      else MDFile (argv[i]);
-
-  return 0;
-}

@@ -1,5 +1,5 @@
 /*
- *  cudamd5.c
+ *  cudamd5.cpp
  *  CUDA Project
  *
  *  Created by Peter Wong on 29/04/09.
@@ -14,10 +14,11 @@
 
 int main(int argc, char *argv[]) {
 
-
 	parseArg(argc, argv);
 
 	
 	/*End of program*/
 	return 0;
 }
+
+

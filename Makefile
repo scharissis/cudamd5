@@ -1,25 +1,37 @@
-CC = g++ -Wall -Werror -O
+# Makefile:
+# Generic Makefile for make-ing cuda programs
+#
 
-all : cudamd5
+BIN               := cudamd5
 
-clean :
-        rm -f cudamd5  *.o
-        
-debug:  dsm test
+# flags
+CUDA_INSTALL_PATH := /usr/local/cuda
+INCLUDES          += -I. -I$(CUDA_INSTALL_PATH)/include -I$(HOME)/NVIDIA_CUDA_SDK/common/inc
+LIBS              := -L$(CUDA_INSTALL_PATH)/lib -L$(HOME)/NVIDIA_CUDA_SDK/lib
+CXXFLAGS          := -O3
+LDFLAGS           := -lrt -lm -lcudart -lcutil
+# compilers
+#NVCC              := nvcc --device-emulation
+NVCC              := nvcc
 
+# files
+CPP_SOURCES       := cudamd5.cpp md5.cpp md5test.cpp deviceQuery.cpp util.cpp argParser.cpp
+CU_SOURCES        := 
+HEADERS           := $(wildcard *.h)
+CPP_OBJS          := $(patsubst %.cpp, %.o, $(CPP_SOURCES))
+CU_OBJS           := $(patsubst %.cu, %.cu_o, $(CU_SOURCES))
 
+%.cu_o : %.cu
+	$(NVCC) -c $(INCLUDES) -o $@ $<
 
+%.o: %.cpp
+	$(CXX) -c $(CXXFLAGS) $(INCLUDES) -o $@ $<
 
-cudamd5 : cudamd5.o argParser.o
-        $(CC) -o $@ $^
+$(BIN): $(CPP_OBJS) $(CU_OBJS)
+	$(CXX) -o $(BIN) $(CU_OBJS) $(CPP_OBJS) $(LDFLAGS) $(INCLUDES) $(LIBS)
 
+util.o: util.cpp util.h
+cuda_md5.o: cudamd5.cpp util.h
 
-
-
-
-cudamd5.o : cudamd5.c
-        $(CC) -c $?
-
-argParser.o : argParser.c
-        $(CC) -c $?
-
+clean:
+	rm -f $(BIN) *.o *.cu_o
