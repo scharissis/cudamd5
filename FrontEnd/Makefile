@@ -1,4 +1,4 @@
-CC = gcc -Wall -Werror -O
+CC = g++ -Wall -Werror -O
 
 all : cudamd5
 
