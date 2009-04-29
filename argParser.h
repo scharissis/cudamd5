@@ -8,5 +8,5 @@
  */
 
 int parseArg(int argc, char* argv[]);
-
+int deviceQuery();
 

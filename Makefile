@@ -31,7 +31,7 @@ $(BIN): $(CPP_OBJS) $(CU_OBJS)
 	$(CXX) -o $(BIN) $(CU_OBJS) $(CPP_OBJS) $(LDFLAGS) $(INCLUDES) $(LIBS)
 
 util.o: util.cpp util.h
-cuda_md5.o: cudamd5.cpp util.h
+cudamd5.o: cudamd5.cpp util.h
 
 clean:
 	rm -f $(BIN) *.o *.cu_o

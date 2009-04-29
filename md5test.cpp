@@ -144,7 +144,7 @@ static void MDFilter ()
 }
 
 // New time trial
-static void MDTimeTrial2 ()
+static void MDTimeTrial_CPU ()
 {
   MD5_CTX mdContext;
   time_t endTime, startTime;

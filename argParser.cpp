@@ -1,5 +1,5 @@
 /*
- *  argParser.c
+ *  argParser.cpp
  *  CUDA Project
  *
  *  Created by Peter Wong on 29/04/09.
@@ -13,17 +13,16 @@
 #include <string.h>
 #include <getopt.h>
 #include <ctype.h>
-
+#include <string>
 
 #define DEBUG 1
-
 
 
 int parseArg(int argc, char* argv[]) {
 	
 	int c;
 	//int opterr = 0;
-	while ((c = getopt (argc, argv, "t:s:e:n:v")) != -1) {
+	while ((c = getopt (argc, argv, "t:s:n:v:b:q")) != -1) {
 		switch (c) {
 			case 't':
 #ifdef DEBUG
@@ -36,17 +35,20 @@ int parseArg(int argc, char* argv[]) {
 				break;
 			case 's':
 #ifdef DEBUG
-				fprintf(stderr,"Start Character Set: %s\n",optarg);
-				
+				fprintf(stderr,"Start Character Set: %s\n",optarg);				
 #endif
 				break;
-			case 'e':
-#ifdef DEBUG
-				fprintf(stderr,"End Character Set: %s\n",optarg);
-#endif
-				break;
+			
 			case 'v':
 				//	printVersion();
+				break;
+
+			case 'b':
+				//	MDTimeTrial_CPU ();
+				//	TODO: This is in md5test.cpp but I can't get it to work here
+				break;
+			case 'q':
+				deviceQuery();
 				break;
 			case '?':
 				if (optopt == 'H' || optopt == 'l' || optopt == 'n') {
@@ -60,8 +62,7 @@ int parseArg(int argc, char* argv[]) {
 				}
 			default:
 				abort ();
-		}     
-		
+		}     		
 	
 	}
 

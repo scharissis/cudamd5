@@ -58,3 +58,4 @@ int deviceQuery()
 	printf("\nTest PASSED\n");
 	return 0;
 }
+

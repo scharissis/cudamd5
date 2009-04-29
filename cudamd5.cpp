@@ -9,14 +9,13 @@
 
 #include "cudamd5.h"
 
-
-
+static void MDTimeTrial_CPU ();
 
 int main(int argc, char *argv[]) {
 
 	parseArg(argc, argv);
 
-	
+
 	/*End of program*/
 	return 0;
 }
