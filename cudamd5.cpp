@@ -74,7 +74,6 @@ int main(int argc, char *argv[]) {
   cout << "Min: " << vm["min"].as<int>() << endl;
   #endif
   
-  
   string charset(vm["charset"].as<string>());
   Permutator p(charset);  
   
