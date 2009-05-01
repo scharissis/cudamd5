@@ -6,16 +6,21 @@ BIN               := cudamd5
 
 # flags
 CUDA_INSTALL_PATH := /usr/local/cuda
+# U S E  W I T H  C U D A
 INCLUDES          += -I. -I$(CUDA_INSTALL_PATH)/include -I$(HOME)/NVIDIA_CUDA_SDK/common/inc
 LIBS              := -L$(CUDA_INSTALL_PATH)/lib -L$(HOME)/NVIDIA_CUDA_SDK/lib
-CXXFLAGS          := -O3
-LDFLAGS           := -lrt -lm -lcudart -lcutil
+LDFLAGS           := -lrt -lm -lcudart -lboost_program_options
+CXXFLAGS				:= -O3
+
+# U S E  W I T H O U T  C U D A
+#LDFLAGS				:= -lboost_program_options
+
 # compilers
 #NVCC              := nvcc --device-emulation
 NVCC              := nvcc
 
 # files
-CPP_SOURCES       := cudamd5.cpp md5.cpp md5test.cpp deviceQuery.cpp
+CPP_SOURCES       := cudamd5.cpp md5.cpp md5test.cpp Permutator.cpp deviceQuery.cpp
 CU_SOURCES        := 
 HEADERS           := $(wildcard *.h)
 CPP_OBJS          := $(patsubst %.cpp, %.o, $(CPP_SOURCES))
