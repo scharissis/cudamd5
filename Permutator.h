@@ -13,11 +13,14 @@ public:
   
   // Generates the next permutation of a particular string.
   std::string permutate(const std::string&);
+  
+    char first;
+  char last;
 
 private:
   std::string charset;
-  char first;
-  char last;
+  //char first;
+  //char last;
   
   std::map<char, char> replacer;
 };
