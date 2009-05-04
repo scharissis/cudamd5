@@ -146,20 +146,20 @@ static void MDFilter ()
 // New time trial
 static void MDTimeTrial_CPU ()
 {
-  MD5_CTX mdContext;
-  time_t endTime, startTime;
+  //MD5_CTX mdContext;
+  //time_t endTime, startTime;
   std::string filename = "/usr/share/dict/words";
 	
   FILE *inFile = fopen (filename.c_str(), "rb");
-  int bytes,n;
+  //int bytes,n;
   char word [42];
-  unsigned char data[1024];
+  //unsigned char data[1024];
 
   if (inFile == NULL) {
     printf ("%s can't be opened.\n", filename.c_str());
     return;
   }  
-  n = 0;
+  int n = 0;
   while (fscanf(inFile, "%s", word) != EOF){
     //printf("%s\n", word);
     MDString(word);

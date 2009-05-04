@@ -14,12 +14,12 @@ NVCC              := $(CUDA_TOOLKIT_PATH)/bin/nvcc --device-emulation
 INCLUDES          := -I. -I$(CUDA_TOOLKIT_PATH)/include -I$(CUDA_SDK_PATH)/common/inc
 LIBS              := -L$(CUDA_INSTALL_PATH)/lib -L$(CUDA_SDK_PATH)/lib -L$(BOOST_LIB_PATH)
 LDFLAGS           := -lcudart -lboost_program_options
-CXXFLAGS  				:= -O3
+CXXFLAGS  				:= -O3 -Wall
 NVCCFLAGS         := -O3
 
 # Source files
 CPP_SOURCES       := cudamd5.cpp md5.cpp md5test.cpp Permutator.cpp
-CU_SOURCES        := deviceQuery.cu arrayTest.cu
+CU_SOURCES        := deviceQuery.cu arrayTest.cu gpuMD5.cu
 HEADERS           := $(wildcard *.h)
 CPP_OBJS          := $(patsubst %.cpp, %.o, $(CPP_SOURCES))
 CU_OBJS           := $(patsubst %.cu, %.o, $(CU_SOURCES))
