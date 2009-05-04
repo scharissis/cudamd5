@@ -8,7 +8,7 @@ HAX		  := /usr/local/lib/libboost_program_options-gcc42-mt-1_38.a
 
 # flags
 CUDA_INSTALL_PATH := /usr/local/cuda
-SDK_PATH	  := /home/stefano/NVIDIA_CUDA_SDK
+SDK_PATH	  := /usr/local/cuda/NVIDIA_CUDA_SDK
 BOOST_LIB_PATH    := /usr/local/lib
 
 # U S E  W I T H  C U D A
