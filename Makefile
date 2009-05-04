@@ -12,7 +12,7 @@ SDK_PATH	  := /home/stefano/NVIDIA_CUDA_SDK
 BOOST_LIB_PATH    := /usr/local/lib
 
 # U S E  W I T H  C U D A
-INCLUDES          += -I. -I$(CUDA_INSTALL_PATH)/include -I$(HOME)/$(SDK_PATH)/common/inc
+INCLUDES          += -I. -I$(CUDA_INSTALL_PATH)/include -I$(SDK_PATH)/common/inc
 LIBS              := -L$(CUDA_INSTALL_PATH)/lib -L$(HOME)/$(SDK_PATH)/lib -L$(BOOST_LIB_PATH)
 LDFLAGS           := -lrt -lm -lcudart
 CXXFLAGS				:= -O3
