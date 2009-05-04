@@ -20,7 +20,7 @@ using namespace std;
 
 //static void MDTimeTrial_CPU ();
 static void MDString (char *inString);
-
+int deviceQuery();
 
 int main(int argc, char *argv[]) {
 
@@ -29,6 +29,7 @@ int main(int argc, char *argv[]) {
   po::options_description desc("Allowed options");
   desc.add_options()
     ("help,?", "Produces this help message.")
+    ("query,q", "Queries CUDA devices.")
     ("target,t", po::value<string>(), "Target digest")
     ("charset,c", po::value<string>(), "Message character set")
     ("min", po::value<int>()->default_value(1), "Minimum message string length")
@@ -46,8 +47,11 @@ int main(int argc, char *argv[]) {
   }
   
   if (vm.count("verbose")) {
-  	po::variables_map::iterator it;
-  	it = vm.begin();
+  	//TODO: Print all options...
+  }
+
+   if (vm.count("query")) {
+  	deviceQuery();
   }
 
   if (!vm.count("target")) {
