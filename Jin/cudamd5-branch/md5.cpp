@@ -143,6 +143,7 @@ void MD5Final (MD5_CTX *mdContext)
   MD5Update (mdContext, PADDING, padLen);
 
   /* append length in bits and transform */
+  /* reverses the words so eg. abcd becomes dcba */
   for (i = 0, ii = 0; i < 14; i++, ii += 4)
     in[i] = (((UINT4)mdContext->in[ii+3]) << 24) |
             (((UINT4)mdContext->in[ii+2]) << 16) |

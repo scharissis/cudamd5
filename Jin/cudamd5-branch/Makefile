@@ -18,8 +18,8 @@ CXXFLAGS  				:= -O3 -Wall
 NVCCFLAGS         := -O3
 
 # Source files
-CPP_SOURCES       := cudamd5.cpp md5.cpp md5test.cpp Permutator.cpp
-CU_SOURCES        := deviceQuery.cu arrayTest.cu gpuMD5.cu
+CPP_SOURCES       := md5.cpp md5test.cpp Permutator.cpp
+CU_SOURCES        := deviceQuery.cu arrayTest.cu gpuMD5.cu cudamd5.cu 
 HEADERS           := $(wildcard *.h)
 CPP_OBJS          := $(patsubst %.cpp, %.o, $(CPP_SOURCES))
 CU_OBJS           := $(patsubst %.cu, %.o, $(CU_SOURCES))
@@ -28,7 +28,7 @@ CU_OBJS           := $(patsubst %.cu, %.o, $(CU_SOURCES))
 	$(NVCC) -c $(NVCCFLAGS) $(INCLUDES) -o $@ $<
 
 %.o: %.cpp
-	$(CXX) -c $(CXXFLAGS) $(INCLUDES) -o $@ $<
+	$(NVCC) -c $(NVCCFLAGS) $(INCLUDES) -o $@ $<
 
 $(BIN): $(CPP_OBJS) $(CU_OBJS)
 	$(NVCC) -o $(BIN) $(CU_OBJS) $(CPP_OBJS) $(LIBS) $(LDFLAGS)

@@ -17,7 +17,7 @@ using namespace std;
 typedef unsigned int UINT;
 
 //static void MDTimeTrial_CPU ();
-static void MDString (char *inString);
+//static void MDString (char *inString);
 
 int main(int argc, char *argv[]) {
   bool isVerbose = false;
@@ -79,13 +79,17 @@ int main(int argc, char *argv[]) {
     
     cudaMalloc((void **)&d, 16 * sizeof(UINT));
     
-    ///md5Hash <<< 4, 3 >>> (d);
+    int a = 4;
+    int b = 3;
+    md5Hash <<< a, b >>> (d);
     
     cudaMemcpy(h, d, 64, cudaMemcpyDeviceToHost);
     
       int i;
   for (i = 0; i != 16; ++i)
     printf("%2d %08x\n", i, h[i]);
+    
+    cudaFree(d);
   }
   else {
     cout << desc << endl;
