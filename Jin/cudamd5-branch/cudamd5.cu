@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
     
     int a = 4;
     int b = 3;
-    md5Hash <<< a, b >>> (d);
+    doHash(h);
     
     cudaMemcpy(h, d, 64, cudaMemcpyDeviceToHost);
     

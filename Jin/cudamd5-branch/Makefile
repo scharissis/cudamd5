@@ -1,14 +1,19 @@
 BIN               := cudamd5
 
+HAX := /usr/local/lib/libboost_program_options-gcc42-mt-1_38.a
+
 # Install paths
-CUDA_TOOLKIT_PATH := $(HOME)/cuda/cuda
-CUDA_SDK_PATH     := $(HOME)/cuda/sdk
-BOOST_LIB_PATH    := /usr/lib
+#CUDA_TOOLKIT_PATH := $(HOME)/cuda/cuda
+#CUDA_SDK_PATH     := $(HOME)/cuda/sdk
+#BOOST_LIB_PATH    := /usr/lib
+CUDA_TOOLKIT_PATH := /usr/local/cuda
+CUDA_SDK_PATH	  := /usr/local/cuda/NVIDIA_CUDA_SDK
+BOOST_LIB_PATH    := /usr/local/lib
 
 # Compilers
 CXX               := g++
-NVCC              := $(CUDA_TOOLKIT_PATH)/bin/nvcc --device-emulation
-#NVCC              := $(CUDA_TOOLKIT_PATH)/bin/nvcc
+#NVCC              := $(CUDA_TOOLKIT_PATH)/bin/nvcc --device-emulation
+NVCC              := $(CUDA_TOOLKIT_PATH)/bin/nvcc
 
 # Compiler flags
 INCLUDES          := -I. -I$(CUDA_TOOLKIT_PATH)/include -I$(CUDA_SDK_PATH)/common/inc
@@ -28,10 +33,10 @@ CU_OBJS           := $(patsubst %.cu, %.o, $(CU_SOURCES))
 	$(NVCC) -c $(NVCCFLAGS) $(INCLUDES) -o $@ $<
 
 %.o: %.cpp
-	$(NVCC) -c $(NVCCFLAGS) $(INCLUDES) -o $@ $<
+	$(CXX) -c $(NVCCFLAGS) $(INCLUDES) -o $@ $<
 
 $(BIN): $(CPP_OBJS) $(CU_OBJS)
-	$(NVCC) -o $(BIN) $(CU_OBJS) $(CPP_OBJS) $(LIBS) $(LDFLAGS)
+	$(NVCC) -o $(BIN) $(CU_OBJS) $(CPP_OBJS) $(LIBS) $(LDFLAGS) $(HAX)
 
 clean:
 	rm -f $(BIN) *.o

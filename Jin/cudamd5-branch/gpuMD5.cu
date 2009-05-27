@@ -2,6 +2,10 @@
 
 #include "cuda.h"
 
+void doHash(UINT* d) {
+  md5Hash <<< 1, 2 >>> (d);
+}
+
 __global__ void md5Hash(UINT* digest) {
   /*
   int r[] = {7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
