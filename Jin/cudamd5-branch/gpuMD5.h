@@ -1,5 +1,6 @@
 typedef unsigned int UINT;
 typedef unsigned char UCHAR;
 
-UINT* pad(UCHAR*, int);
-void md5Hash(UINT* digest);
+void doHash(char*, UINT*, UINT*, int);
+//__device__ UINT* pad(UINT*, UCHAR*, int);
+//__global__ void md5Hash(UINT* digest);

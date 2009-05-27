@@ -2,11 +2,21 @@
 
 #include "cuda.h"
 
-void doHash(UINT* d) {
-  md5Hash <<< 1, 2 >>> (d);
+extern __shared__ UINT array[];
+//__shared__ UINT paddedMessage[];
+//__shared__ UCHAR m[];
+
+__global__ void md5Hash(char*, UINT*, int);
+__device__ UINT* pad(UINT*, UCHAR*, int);
+
+void doHash(char* a, UINT* d, UINT* h, int length) {
+  cudaMalloc((void**)&d, 64);
+  md5Hash <<< 1, 2, 8000 >>> (a, d, length);
+  cudaMemcpy(h, d, 64, cudaMemcpyDeviceToHost);
 }
 
-__global__ void md5Hash(UINT* digest) {
+__global__ void md5Hash(char* message, UINT* digest, int length) {
+
   /*
   int r[] = {7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
              5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,
@@ -29,31 +39,43 @@ __global__ void md5Hash(UINT* digest) {
     i += 512;
   }
   */
-  UCHAR* message;
+  /*
+  UCHAR message[4];
   
-  cudaMalloc((void**)&message, 4);
+  //cudaMalloc((void**)&message, strlen(message));
   
   message[0] = 'a';
   message[1] = 'a';
   message[2] = 'a';
   message[3] = 'a';
-  
-  digest = pad(message, 4);
+  */
+  pad(digest, (UCHAR*)message, length);
 }
 
-__device__ UINT* pad(UCHAR* message, int msgLength) {
-  UCHAR* m;
-  UINT* paddedMessage = 0;
+__device__ UINT* pad(UINT* paddedMessage, UCHAR* message, int msgLength) {
+  //UCHAR* m;
+  //UINT* paddedMessage = 0;
+  //UINT* paddedMessage = (UINT*)array;
+  //UCHAR* m = (UCHAR*)&paddedMessage[16];
+//UINT* paddedMessage = (UINT*)&array;
+UCHAR m[56];
   
-  cudaMalloc((void**)&m, 56 * sizeof(UCHAR));
+  //cudaMalloc((void**)&m, 56 * sizeof(UCHAR));
   
-  memset(m, 0x00, 56);
-  memcpy(m, message, msgLength);
+  int i;
+  for (i = 0; i != 56; ++i)
+    m[i] = 0x00;
+
+  for (i = 0; i != msgLength; ++i)
+    m[i] = message[i];
+
+  //cudaMemset(m, 0x00, 56);
+  //cudaMemcpy(m, message, msgLength);
   m[msgLength] = 0x80;
   
-  cudaMalloc((void**)&paddedMessage, 16 * sizeof(UINT));
+  //cudaMalloc((void**)&paddedMessage, 16 * sizeof(UINT));
   
-  int i = 0;
+  //int i = 0;
   for (i = 0; i != 14; ++i) {
       paddedMessage[i] = (UINT)m[i*4+3] << 24 |
         (UINT)m[i*4+2] << 16 |
