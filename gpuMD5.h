@@ -5,4 +5,5 @@
 
 #include "constants.h"
 
+void initialiseConstants(UINT*);
 void doHash(std::vector<std::string>&);

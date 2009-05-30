@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include "cuda.h"
+#include "cutil.h"
 #include "gpuMD5.h"
 #include "constants.h"
 
@@ -16,6 +17,8 @@ namespace po = boost::program_options;
 using namespace std;
 
 typedef unsigned int UINT;
+
+UCHAR c2c (char c);
 
 //static void MDTimeTrial_CPU ();
 //static void MDString (char *inString);
@@ -74,9 +77,33 @@ int main(int argc, char *argv[]) {
       message = p.permutate(message);
     } while (message != end);
     */
+    
+    // Getting the device properties.
+    cudaDeviceProp deviceProp;
+    cudaGetDeviceProperties(&deviceProp, 0);
+    int numBlocks = deviceProp.multiProcessorCount * 2;
+    int numThreadsPerBlock = NUM_THREADS_PER_BLOCK;
+    int numThreadsPerGrid = numBlocks * numThreadsPerBlock;
+    int sharedMem = deviceProp.sharedMemPerBlock / 2;
+    
+    //UINT target[4];
+    string t = vm["target"].as<string>();
+    
+    UINT tx[4];
+    for (int c=0;c<t.size();c+=8) {
+      UINT x = c2c(t[c]) <<4 | c2c(t[c+1]); 
+      UINT y = c2c(t[c+2]) << 4 | c2c(t[c+3]);
+      UINT z = c2c(t[c+4]) << 4 | c2c(t[c+5]);
+      UINT w = c2c(t[c+6]) << 4 | c2c(t[c+7]);
+      printf("%08x\n",x);
+      tx[c/8] = w << 24 | z << 16 | y << 8 | x;
+    }
+    //target = make_uint4(tx[0], tx[1], tx[2], tx[3]);
+    printf("%08x %08x %08x %08x\n", tx[0], tx[1], tx[2], tx[3]);
+    initialiseConstants(tx);
 
     vector<string> messages;
-    for (int i = 0; i != 16; ++i) {
+    for (int i = 0; i != numThreadsPerGrid; ++i) {
       messages.push_back(message);
       message = p.permutate(message);
     }
@@ -88,6 +115,10 @@ int main(int argc, char *argv[]) {
   }
   
   return EXIT_SUCCESS;
+}
+
+UCHAR c2c (char c){
+  return (UCHAR)((c > '9') ? (c - 'a' + 10) : (c - '0'));
 }
 
 

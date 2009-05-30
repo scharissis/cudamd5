@@ -57,16 +57,14 @@ __device__ void II(UINT& a, UINT& b, UINT& c, UINT& d, UINT& x, UINT s, UINT ac)
 extern __shared__ char array[];
 __constant__ int device_shift_amounts[64];
 __constant__ UINT device_sines[64];
+__constant__ UINT deviceTarget[4];
 __device__ UCHAR m[56];
 
 __global__ void md5Hash(UCHAR**, int*, uint4*);
 __device__ UINT* pad(UCHAR*, int);
 
-
-// md5Hash(message, device, host, length);
-void doHash(std::vector<std::string>& keys) {
-  using namespace std;
-
+void initialiseConstants(UINT* target) {
+/*
   int host_shift_amounts[] = {7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
              5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,
              4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,  4, 11, 16, 23,
@@ -84,23 +82,22 @@ void doHash(std::vector<std::string>& keys) {
                        1873313359, 4264355552, 2734768916, 1309151649, 4149444226, 3174756917, 718787259, 3951481745};                       
   
   cudaMemcpyToSymbol(device_sines, host_sines, sizeof(host_sines));
-                       
-                       
+*/
+
+  cudaMemcpyToSymbol(deviceTarget, target, sizeof(deviceTarget));
+  
+}
 
 
-
-
-
-
-
-
-
+// md5Hash(message, device, host, length);
+void doHash(std::vector<std::string>& keys) {
+  using namespace std;
 
   // Getting the device properties.
   cudaDeviceProp deviceProp;
   cudaGetDeviceProperties(&deviceProp, 0);
   int numBlocks = deviceProp.multiProcessorCount * 2;
-  int numThreadsPerBlock = 2;
+  int numThreadsPerBlock = NUM_THREADS_PER_BLOCK;
   int numThreadsPerGrid = numBlocks * numThreadsPerBlock;
   int sharedMem = deviceProp.sharedMemPerBlock / 2;
 
@@ -140,7 +137,7 @@ void doHash(std::vector<std::string>& keys) {
     for (int i = 0; i != keys.size(); ++i)
     hostDigests[i] = make_uint4(9, 9, 9, 9);
     
-  md5Hash <<< 8, 2, 8192 >>> (deviceMsgLocationsOnDevice, deviceMsgLengths, deviceDigests);
+  md5Hash <<< numBlocks, numThreadsPerBlock, sharedMem >>> (deviceMsgLocationsOnDevice, deviceMsgLengths, deviceDigests);
   cudaThreadSynchronize();
   
     err = cudaGetLastError();
@@ -153,7 +150,7 @@ void doHash(std::vector<std::string>& keys) {
     printf("3: %s\n", cudaGetErrorString(err));
   
   for (int i = 0; i != keys.size(); ++i) {
-    printf("%08x %08x %08x %08x\n", hostDigests[i].x, hostDigests[i].y, hostDigests[i].z, hostDigests[i].w);
+    //printf("%08x %08x %08x %08x\n", hostDigests[i].x, hostDigests[i].y, hostDigests[i].z, hostDigests[i].w);
   }
 }
 
