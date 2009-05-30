@@ -1,4 +1,6 @@
 1. Check against 'target' digest; return thread index as result (pass a pointer for the index)
 2. Extend string/permutation generation. We're just doing 1 chunk at the moment.
 3. Print the key which produced the digest
+4. Clean code
+5. Comment code
 
