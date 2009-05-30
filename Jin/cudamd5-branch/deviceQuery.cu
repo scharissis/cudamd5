@@ -29,6 +29,10 @@ void deviceQuery()
 			   deviceProp.totalConstMem); 
 		printf("  Total amount of shared memory per block:       %d bytes\n",
 			   deviceProp.sharedMemPerBlock);
+		printf("  Number of multiprocessors:                     %d\n",
+               deviceProp.multiProcessorCount);
+     		   printf("  Number of cores:                               %d\n",
+               8 * deviceProp.multiProcessorCount);
 		printf("  Total number of registers available per block: %d\n",
 			   deviceProp.regsPerBlock);
 		printf("  Warp size:                                     %d\n",

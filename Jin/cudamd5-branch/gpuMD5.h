@@ -1,6 +1,8 @@
-typedef unsigned int UINT;
-typedef unsigned char UCHAR;
+#include <string>
+#include <vector>
 
-void doHash(char*, UINT*, UINT*, int);
-//__device__ UINT* pad(UINT*, UCHAR*, int);
-//__global__ void md5Hash(UINT* digest);
+#include "cuda.h"
+
+#include "constants.h"
+
+void doHash(std::vector<std::string>&);

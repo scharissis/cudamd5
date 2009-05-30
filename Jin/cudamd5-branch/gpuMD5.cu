@@ -1,21 +1,84 @@
 #include "gpuMD5.h"
 
-#include "cuda.h"
+extern __shared__ char array[];
 
-extern __shared__ UINT array[];
-//__shared__ UINT paddedMessage[];
-//__shared__ UCHAR m[];
-
-__global__ void md5Hash(char*, UINT*, int);
+__global__ void md5Hash(UCHAR**, int*, uint4*);
 __device__ UINT* pad(UINT*, UCHAR*, int);
 
-void doHash(char* a, UINT* d, UINT* h, int length) {
+// md5Hash(message, device, host, length);
+void doHash(std::vector<std::string>& keys) {
+  using namespace std;
+
+  // Getting the device properties.
+  cudaDeviceProp deviceProp;
+  cudaGetDeviceProperties(&deviceProp, 0);
+  int numBlocks = deviceProp.multiProcessorCount * 2;
+  int numThreadsPerGrid = 64 * numBlocks;
+  int sharedMem = deviceProp.sharedMemPerBlock / 2;
+
+  // Array of pointers to each message on device memory.
+  UCHAR* msgLocationsOnDevice[numThreadsPerGrid];
+  
+  // Array of lengths of each message.
+  int hostMsgLengths[numThreadsPerGrid];
+  int* deviceMsgLengths;
+
+  // Array of hash for each message.
+  uint4 hostDigests[numThreadsPerGrid];
+  uint4 deviceDigests[numThreadsPerGrid];
+
+  // For each message
+  for (int i = 0; i != keys.size(); ++i) {
+    const char* key = keys[i].c_str();
+    
+    cudaMalloc((void **)&msgLocationsOnDevice[i], keys[i].length() * sizeof(UCHAR));
+    cudaMemcpy(msgLocationsOnDevice[i], key, keys[i].length(), cudaMemcpyHostToDevice);
+    
+    cudaMalloc((void **)&deviceMsgLengths, numThreadsPerGrid * sizeof(int));
+    cudaMemcpy(deviceMsgLengths, hostMsgLengths, numThreadsPerGrid * sizeof(int), cudaMemcpyHostToDevice);
+  }
+
+  cudaMalloc((void **)&deviceDigests, numThreadsPerGrid * sizeof(uint4));
+  
+  md5Hash <<< numThreadsPerGrid, numBlocks, sharedMem >>> (msgLocationsOnDevice, deviceMsgLengths, deviceDigests);
+
+
+/*
+    char* b;
+    UINT h[16];
+    UINT* d;
+
+    cudaMalloc((void **)&b, t.size() * sizeof(char));
+    cudaMemcpy(b, a, t.size(), cudaMemcpyHostToDevice); 
+
+    //doHash(b, d, h, t.size());
+    
+    cudaMemcpy(h, d, 64, cudaMemcpyDeviceToHost);
+    
+      int i;
+  for (i = 0; i != 16; ++i)
+    printf("%2d %08x\n", i, h[i]);
+    
+    cudaFree(d);
+
   cudaMalloc((void**)&d, 64);
-  md5Hash <<< 1, 2, 8000 >>> (a, d, length);
+  
+  cudaDeviceProp deviceProp;
+  cudaGetDeviceProperties(&deviceProp, 0);
+
+  int numBlocks = deviceProp.multiProcessorCount * 2;
+  int numThreadsPerGrid = 64 * numBlocks;
+  int sharedMem = deviceProp.sharedMemPerBlock / 2;
+
+  md5Hash <<< numThreadsPerGrid, numBlocks, sharedMem >>> (a, d, length);
+  
   cudaMemcpy(h, d, 64, cudaMemcpyDeviceToHost);
+*/
 }
 
-__global__ void md5Hash(char* message, UINT* digest, int length) {
+__global__ void md5Hash(UCHAR** messages, int* msgLengths, uint4* digests) {
+
+  //pad(digest, (UCHAR*)message, numMessages);
 
   /*
   int r[] = {7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
@@ -39,17 +102,8 @@ __global__ void md5Hash(char* message, UINT* digest, int length) {
     i += 512;
   }
   */
-  /*
-  UCHAR message[4];
+    
   
-  //cudaMalloc((void**)&message, strlen(message));
-  
-  message[0] = 'a';
-  message[1] = 'a';
-  message[2] = 'a';
-  message[3] = 'a';
-  */
-  pad(digest, (UCHAR*)message, length);
 }
 
 __device__ UINT* pad(UINT* paddedMessage, UCHAR* message, int msgLength) {
@@ -57,8 +111,8 @@ __device__ UINT* pad(UINT* paddedMessage, UCHAR* message, int msgLength) {
   //UINT* paddedMessage = 0;
   //UINT* paddedMessage = (UINT*)array;
   //UCHAR* m = (UCHAR*)&paddedMessage[16];
-//UINT* paddedMessage = (UINT*)&array;
-UCHAR m[56];
+  //UINT* paddedMessage = (UINT*)&array;
+  UCHAR* m = (UCHAR*)&array;;
   
   //cudaMalloc((void**)&m, 56 * sizeof(UCHAR));
   
