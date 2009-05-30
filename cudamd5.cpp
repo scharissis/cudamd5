@@ -12,7 +12,6 @@ namespace po = boost::program_options;
 #include "deviceQuery.h"
 #include "md5test.cpp"
 #include "Permutator.h"
-#include "arrayTest.h"
 
 using namespace std;
 
@@ -79,7 +78,6 @@ int main(int argc, char *argv[]) {
     vector<string> messages;
     for (int i = 0; i != 16; ++i) {
       messages.push_back(message);
-      //cout << message << endl;
       message = p.permutate(message);
     }
     

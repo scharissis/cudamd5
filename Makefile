@@ -21,11 +21,11 @@ LIBS              := -L$(CUDA_INSTALL_PATH)/lib -L$(CUDA_SDK_PATH)/lib -L$(BOOST
 #LDFLAGS           := -lcudart -lboost_program_options
 LDFLAGS := -lcudart
 CXXFLAGS  				:= -O3 -Wall
-NVCCFLAGS         := -O3
+NVCCFLAGS         := -O3 --debug
 
 # Source files
 CPP_SOURCES       := md5.cpp md5test.cpp Permutator.cpp cudamd5.cpp
-CU_SOURCES        := deviceQuery.cu arrayTest.cu gpuMD5.cu 
+CU_SOURCES        := deviceQuery.cu gpuMD5.cu 
 HEADERS           := $(wildcard *.h)
 CPP_OBJS          := $(patsubst %.cpp, %.o, $(CPP_SOURCES))
 CU_OBJS           := $(patsubst %.cu, %.o, $(CU_SOURCES))
