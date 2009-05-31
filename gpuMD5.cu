@@ -93,7 +93,7 @@ void initialiseConstants(UINT* target) {
 
 
 // md5Hash(message, device, host, length);
-void doHash(std::vector<std::string>& keys) {
+bool doHash(std::vector<std::string>& keys) {
   using namespace std;
 
   // Getting the device properties.
@@ -172,9 +172,12 @@ void doHash(std::vector<std::string>& keys) {
       putchar(result[i]);
     putchar('\n');
     
+    return true;
+    
     //printf("Data at result %08x %08x %08x %08x\n",result[0],result[1],result[2],result[3]);
   } else {
-    printf("Target hash not found.\n");
+    return false;
+    //printf("Target hash not found.\n");
   }
   err = cudaGetLastError();
   if (cudaSuccess != err)
@@ -299,7 +302,7 @@ __global__ void md5Hash(UCHAR** messages, int* msgLengths, uint4* digests) {
   if (a == deviceTarget[0] && b == deviceTarget[1] && c == deviceTarget[2] && d == deviceTarget[3]){
      resultIndex = idx;
   } else {
-    resultIndex = -1;  
+    //resultIndex = -1;  // For some reason this does not work!? (Program wont find target hash)
   }
   digests[idx] = make_uint4(a, b, c, d);
   

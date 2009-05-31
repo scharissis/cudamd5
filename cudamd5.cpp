@@ -111,7 +111,8 @@ int main(int argc, char *argv[]) {
         message = p.permutate(message);
       }
      
-      doHash(messages);
+      if(doHash(messages))
+        break;
       nKeys+=64;
        if(message.length() > maxLen)
         break;
