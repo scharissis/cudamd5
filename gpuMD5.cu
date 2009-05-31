@@ -1,6 +1,7 @@
 #include "gpuMD5.h"
 #include "cutil.h"
 
+// Forward declarations of basic MD5 functions
 __device__ UINT F(UINT x, UINT y, UINT z);
 __device__ UINT G(UINT x, UINT y, UINT z);
 __device__ UINT H(UINT& x, UINT& y, UINT& z);
@@ -53,17 +54,18 @@ __device__ void II(UINT& a, UINT& b, UINT& c, UINT& d, UINT& x, UINT s, UINT ac)
    (a) = ROTATE_LEFT ((a), (s)); 
    (a) += (b);
 }
-
+// CONSTANT DECLARATIONS
 extern __shared__ char array[];
-__constant__ int device_shift_amounts[64];
-__constant__ UINT device_sines[64];
+//__constant__ int device_shift_amounts[64];
+//__constant__ UINT device_sines[64];
 __constant__ UINT deviceTarget[4];
-__device__ UCHAR m[56];
+__device__ int resultIndex;
 
 __global__ void md5Hash(UCHAR**, int*, uint4*);
 __device__ UINT* pad(UCHAR*, int);
 
 void initialiseConstants(UINT* target) {
+  UINT nf = -1;
 /*
   int host_shift_amounts[] = {7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
              5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,  5,  9, 14, 20,
@@ -83,8 +85,9 @@ void initialiseConstants(UINT* target) {
   
   cudaMemcpyToSymbol(device_sines, host_sines, sizeof(host_sines));
 */
-
+  // Copy target hash to the device (So that the comparison can be done on the GPU)
   cudaMemcpyToSymbol(deviceTarget, target, sizeof(deviceTarget));
+  cudaMemcpyToSymbol(resultIndex, &nf, sizeof(nf));
   
 }
 
@@ -112,12 +115,14 @@ void doHash(std::vector<std::string>& keys) {
   // Array of hash for each message.
   uint4 hostDigests[numThreadsPerGrid];
   uint4* deviceDigests;
+  UCHAR result[56];
 
   // For each message
   for (int i = 0; i != keys.size(); ++i) {
     const char* key = keys[i].c_str();
     hostMsgLengths[i] = keys[i].size();
     
+    // Create an array of pointers pointing to the hashes
     cudaMalloc((void **)&hostMsgLocationsOnDevice[i], keys[i].length() * sizeof(UCHAR));
     cudaMemcpy(hostMsgLocationsOnDevice[i], key, keys[i].length(), cudaMemcpyHostToDevice);
     
@@ -138,13 +143,39 @@ void doHash(std::vector<std::string>& keys) {
     hostDigests[i] = make_uint4(9, 9, 9, 9);
     
   md5Hash <<< numBlocks, numThreadsPerBlock, sharedMem >>> (deviceMsgLocationsOnDevice, deviceMsgLengths, deviceDigests);
-  cudaThreadSynchronize();
+  //cudaThreadSynchronize();
   
     err = cudaGetLastError();
   if (cudaSuccess != err)
     printf("2: %s\n", cudaGetErrorString(err));
   cudaMemcpy(hostDigests, deviceDigests, sizeof(hostDigests), cudaMemcpyDeviceToHost);
+  int ri = NOT_FOUND;
+  int* resultAddress;
+  //  cudaGetSymbolAddress((void**)&resultAddress, "resultIndex");
   
+  
+  if (cudaSuccess == cudaGetSymbolAddress((void**)&resultAddress, "resultIndex")) {
+    //printf("OK\n");
+  } else {
+    printf("ERROR: Address of resultAddress is invalid!\n");
+  };
+  
+  
+  cudaMemcpy(&ri, resultAddress, sizeof(int), cudaMemcpyDeviceToHost);
+  // Check if target hash was found
+  if (ri >= 0){
+    printf("Result index: %d\n",ri);
+    cudaMemcpy(result, hostMsgLocationsOnDevice[ri], hostMsgLengths[ri], cudaMemcpyDeviceToHost);
+    printf("Hash found: ");
+    //Prints 
+    for(int i =0; i != hostMsgLengths[ri]; i++)
+      putchar(result[i]);
+    putchar('\n');
+    
+    //printf("Data at result %08x %08x %08x %08x\n",result[0],result[1],result[2],result[3]);
+  } else {
+    printf("Target hash not found.\n");
+  }
   err = cudaGetLastError();
   if (cudaSuccess != err)
     printf("3: %s\n", cudaGetErrorString(err));
@@ -264,7 +295,14 @@ __global__ void md5Hash(UCHAR** messages, int* msgLengths, uint4* digests) {
   c += h2;
   d += h3;
   
+  // Check to see if this is the target hash!
+  if (a == deviceTarget[0] && b == deviceTarget[1] && c == deviceTarget[2] && d == deviceTarget[3]){
+     resultIndex = idx;
+  } else {
+    resultIndex = -1;  
+  }
   digests[idx] = make_uint4(a, b, c, d);
+  
 }
 
 __device__ UINT* pad(UCHAR* message, int msgLength) {
@@ -301,17 +339,3 @@ __device__ UINT* pad(UCHAR* message, int msgLength) {
   return paddedMessage;
 }
 
-__device__ UINT* transform(UINT* chunk) {
-  return 0;
-}
-
-/*
-__device__ void hash(UINT* message, UINT* digest) {
-
-}
-d02e9573 e43296bc 2bc562d5 d592e8f0
-
-73952ed0bc9632e4d562c52bf08e92d5
-
-
-*/

@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
     
     string message(minLen, p.first);
     string end(maxLen + 1, p.first);
-    
+        
     /*
     do {
       MDString(message.c_str());
@@ -87,28 +87,40 @@ int main(int argc, char *argv[]) {
     int sharedMem = deviceProp.sharedMemPerBlock / 2;
     
     //UINT target[4];
-    string t = vm["target"].as<string>();
+    string targetHash = vm["target"].as<string>();
     
-    UINT tx[4];
-    for (int c=0;c<t.size();c+=8) {
-      UINT x = c2c(t[c]) <<4 | c2c(t[c+1]); 
-      UINT y = c2c(t[c+2]) << 4 | c2c(t[c+3]);
-      UINT z = c2c(t[c+4]) << 4 | c2c(t[c+5]);
-      UINT w = c2c(t[c+6]) << 4 | c2c(t[c+7]);
-      printf("%08x\n",x);
-      tx[c/8] = w << 24 | z << 16 | y << 8 | x;
+    // Reverse target endianess
+    UINT reversedTargetHash[4];
+    for (int c=0;c<targetHash.size();c+=8) {
+      UINT x = c2c(targetHash[c]) <<4 | c2c(targetHash[c+1]); 
+      UINT y = c2c(targetHash[c+2]) << 4 | c2c(targetHash[c+3]);
+      UINT z = c2c(targetHash[c+4]) << 4 | c2c(targetHash[c+5]);
+      UINT w = c2c(targetHash[c+6]) << 4 | c2c(targetHash[c+7]);
+      reversedTargetHash[c/8] = w << 24 | z << 16 | y << 8 | x;
     }
-    //target = make_uint4(tx[0], tx[1], tx[2], tx[3]);
-    printf("%08x %08x %08x %08x\n", tx[0], tx[1], tx[2], tx[3]);
-    initialiseConstants(tx);
+    //target = make_uint4(reversedTargetHash[0], reversedTargetHash[1], reversedTargetHash[2], reversedTargetHash[3]);
+    //printf("Target (Reversed) Hash: %08x %08x %08x %08x\n", reversedTargetHash[0], reversedTargetHash[1], reversedTargetHash[2], reversedTargetHash[3]);
+    initialiseConstants(reversedTargetHash);
 
+    int nKeys=0;
+ 
     vector<string> messages;
-    for (int i = 0; i != numThreadsPerGrid; ++i) {
-      messages.push_back(message);
-      message = p.permutate(message);
-    }
-    
-    doHash(messages);
+    while(true){
+      for (int i = 0; i != numThreadsPerGrid; ++i) {
+        messages.push_back(message);
+        message = p.permutate(message);
+      }
+     
+      doHash(messages);
+      nKeys+=64;
+       if(message.length() > maxLen)
+        break;
+      
+      messages.clear();
+     }
+    printf("%d keys searched.\n", nKeys);
+
+        
   }
   else {
     cout << desc << endl;
