@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     initialiseConstants(reversedTargetHash);
 
     int nKeys=0;
- 
+    printf("Testing with chunks of size %d\n", numThreadsPerGrid);
     vector<string> messages;
     while(true){
       for (int i = 0; i != numThreadsPerGrid; ++i) {

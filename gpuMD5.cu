@@ -164,7 +164,7 @@ bool doHash(std::vector<std::string>& keys) {
   cudaMemcpy(&ri, resultAddress, sizeof(int), cudaMemcpyDeviceToHost);
   // Check if target hash was found
   if (ri >= 0){
-    printf("Result index: %d\n",ri);
+    //printf("Result index: %d\n",ri);
     cudaMemcpy(result, hostMsgLocationsOnDevice[ri], hostMsgLengths[ri], cudaMemcpyDeviceToHost);
     printf("Hash found: ");
     //Prints 
