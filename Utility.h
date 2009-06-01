@@ -5,5 +5,6 @@ typedef unsigned int UINT;
 typedef unsigned char UCHAR;
 
 #include <string>
+#include <vector>
 
-string prepareTarget(const std::string&);
+std::vector<UINT> prepareTarget(const std::string&);

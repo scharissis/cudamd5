@@ -18,7 +18,7 @@ CXXFLAGS  				:= -O3 -Wall -Werror
 NVCCFLAGS         := -O3
 
 # Source files
-CPP_SOURCES       := Permutator.cpp cudamd5.cpp
+CPP_SOURCES       := Permutator.cpp Utility.cpp cudamd5.cpp
 CU_SOURCES        := md5GPU.cu
 HEADERS           := $(wildcard *.h)
 CPP_OBJS          := $(patsubst %.cpp, %.o, $(CPP_SOURCES))
