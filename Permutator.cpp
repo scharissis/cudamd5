@@ -1,11 +1,13 @@
+// Implementation of Permutator class.
+
 #include <utility>
 
 #include "Permutator.h"
 
-using std::pair;
+using std::make_pair;
 using std::string;
 
-Permutator::Permutator(string charset) :
+Permutator::Permutator(const std::string& charset) :
   charset(charset) {
   char key;
   char value;
@@ -23,8 +25,7 @@ Permutator::Permutator(string charset) :
     key = *it;
     value = *++it;
     
-    // *** FIXME Can be improved by giving it an iterator position to insert at.
-    replacer.insert(pair<char, char>(key, value));
+    replacer.insert(make_pair(key, value));
   }
 }
 
@@ -48,7 +49,7 @@ string Permutator::permutate(const std::string& s) {
       // over, and we can terminate the loop earlier.
       if (it == end) {
         result.push_back(first);
-        end = result.end();
+        //end = result.end(); // Unnecessary.
         incrementNext = false;
       }
     }

@@ -3,26 +3,24 @@
 #ifndef PERMUTATOR_H
 #define PERMUTATOR_H
 
-#include <map>
 #include <string>
+
+#include <boost/unordered_map.hpp>
 
 class Permutator {
 public:
   // Constructor
-  Permutator(std::string);
+  Permutator(const std::string&);
   
   // Generates the next permutation of a particular string.
   std::string permutate(const std::string&);
   
-    char first;
+  char first;
   char last;
 
 private:
-  std::string charset;
-  //char first;
-  //char last;
-  
-  std::map<char, char> replacer;
+  std::string charset;  
+  boost::unordered_map<char, char> replacer;
 };
 
 #endif
