@@ -1,4 +1,4 @@
-BIN								:= CudaMD5
+BIN								:= cudamd5
 
 # Install paths
 #CUDA_TOOLKIT_PATH	:= $(HOME)/cuda/cuda

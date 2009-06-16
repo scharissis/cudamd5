@@ -58,11 +58,7 @@ __device__ __constant__ uchar d_powerSymbols[NUM_POWER_SYMBOLS];
 #define NUM_POWER_VALUES 16
 __constant__ float d_powerValues[NUM_POWER_VALUES];
 
-//__device__ float* d_messageNumber;
-
-//__device__ float* d_startNumbers;
-
-__global__ void doMD5(float*, float, float, size_t, float*);
+__global__ void doMD5(float*, float, size_t, size_t, float*, uchar*);
 
 uchar c2c (char c){
   return (uchar)((c > '9') ? (c - 'a' + 10) : (c - '0'));
@@ -70,15 +66,15 @@ uchar c2c (char c){
 
 void initialiseGPU(string targetDigest, string targetCharset) {
 
-      // Reverse target endianess
-      uint h_targetDigest[4];
-      for (int c=0;c<targetDigest.size();c+=8) {
-        uint x = c2c(targetDigest[c]) <<4 | c2c(targetDigest[c+1]); 
-        uint y = c2c(targetDigest[c+2]) << 4 | c2c(targetDigest[c+3]);
-        uint z = c2c(targetDigest[c+4]) << 4 | c2c(targetDigest[c+5]);
-        uint w = c2c(targetDigest[c+6]) << 4 | c2c(targetDigest[c+7]);
-        h_targetDigest[c/8] = w << 24 | z << 16 | y << 8 | x;
-      }
+  // Reverse target endianess
+  uint h_targetDigest[4];
+  for (int c=0;c<targetDigest.size();c+=8) {
+    uint x = c2c(targetDigest[c]) <<4 | c2c(targetDigest[c+1]); 
+    uint y = c2c(targetDigest[c+2]) << 4 | c2c(targetDigest[c+3]);
+    uint z = c2c(targetDigest[c+4]) << 4 | c2c(targetDigest[c+5]);
+    uint w = c2c(targetDigest[c+6]) << 4 | c2c(targetDigest[c+7]);
+    h_targetDigest[c/8] = w << 24 | z << 16 | y << 8 | x;
+  }
   
   /*    
   // abcd is the message.
@@ -125,40 +121,55 @@ pair<bool, string> findMessage(size_t min, size_t max, size_t charsetLength) {
   CUDA_SAFE_CALL(cudaMalloc((void**)&d_startNumbers, (nBlocks * nThreadsPerBlock) * sizeof(float)));
   
   float h_startNumbers[(nBlocks * nThreadsPerBlock)];
+  
+  uchar* d_message;
+  CUDA_SAFE_CALL(cudaMalloc((void**)&d_message, 16 * sizeof(uchar)));
+  uchar h_message[16];
+  
   for (size_t size = min; size <= max; ++size) {
-    //cout << size << endl;
     float maxValue = pow((float)charsetLength, (float)size);
-    //cout << "Max value: " << maxValue << endl;
     float nIterations = ceil(maxValue / (nBlocks * nThreadsPerBlock));
-    //cout << "Iterations: " << nIterations << endl;
     
     for (size_t i = 0; i != (nBlocks * nThreadsPerBlock); ++i) {
       h_startNumbers[i] = i * nIterations;
-      //cout << "Start " << i << ":" << h_startNumbers[i] << endl;
     }
 
     CUDA_SAFE_CALL(cudaMemcpy(d_startNumbers, h_startNumbers, 
       (nBlocks * nThreadsPerBlock) * sizeof(float), cudaMemcpyHostToDevice));
     
-    doMD5<<< nBlocks, nThreadsPerBlock >>>(d_startNumbers, nIterations, maxValue, size, d_messageNumber);
+    doMD5<<< nBlocks, nThreadsPerBlock >>>(d_startNumbers, nIterations, charsetLength, size, d_messageNumber, d_message);
+    
+    cudaThreadSynchronize();
+    cout << size << endl;
+    printf("%s\n", cudaGetErrorString(cudaGetLastError()));
+    
     CUDA_SAFE_CALL(cudaMemcpy(&h_messageNumber, d_messageNumber, 
       sizeof(float), cudaMemcpyDeviceToHost));
 
     if (h_messageNumber != -1) {
-      printf("Found key: %f\n", h_messageNumber);
+      printf("%f\n", h_messageNumber);
+      CUDA_SAFE_CALL(cudaMemcpy(h_message, d_message, 
+        16 * sizeof(uchar), cudaMemcpyDeviceToHost));
+        
+      string message;
+      for (size_t i = 0; i != size; ++i)
+        message.push_back(h_message[i]);
+      
+      cout << message << endl;
       break;
     }
-    
-    //cout << endl;
   }
   
   CUDA_SAFE_CALL(cudaFree(d_startNumbers));
+  CUDA_SAFE_CALL(cudaFree(d_message));
   
   return make_pair(isFound, message);
 }
 
-__global__ void doMD5(float* d_startNumbers, float nIterations, float maxValue, size_t size, float* d_messageNumber) {
+__global__ void doMD5(float* d_startNumbers, float nIterations, size_t charsetLength, size_t size, float* d_messageNumber, uchar* message) {
   size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+  float maxValue = powf(__uint2float_rz(charsetLength), __uint2float_rz(size));
+  
   uint in[17];
   
   // Zero out the chunk to hash.
@@ -177,15 +188,27 @@ __global__ void doMD5(float* d_startNumbers, float nIterations, float maxValue, 
   // Put the 1 bit.
   toHashAsChar[size] = 0x80;
   
-  float numberToConvert = 0;
-  for (float iterationsDone = 0; iterationsDone != nIterations; ++iterationsDone) {    
-    numberToConvert = __fadd_ru(d_startNumbers[idx], iterationsDone); // FIXME
+  float numberToConvert = d_startNumbers[idx];
+  size_t toHashAsCharIndices[17];
+  
+  if (numberToConvert < maxValue) {
+    for (size_t i = 0; i != size; ++i) {
+      toHashAsCharIndices[i] = __float2uint_rz(floorf(numberToConvert / d_powerValues[NUM_POWER_VALUES - size + i]));
+      numberToConvert = floorf(fmodf(numberToConvert, d_powerValues[NUM_POWER_VALUES - size + i]));
+    }
     
-    if (numberToConvert <= maxValue) {
+    for (float iterationsDone = 0; iterationsDone != nIterations; ++iterationsDone) {
+      /*
       for (size_t power = 0; power != size; ++power) {
         toHashAsChar[power] = d_powerSymbols[__float2uint_rz(floorf(numberToConvert / d_powerValues[NUM_POWER_VALUES - size + power]))];
         numberToConvert = floorf(fmodf(numberToConvert, d_powerValues[NUM_POWER_VALUES - size + power]));
       }
+      */
+      if (*d_messageNumber == 1)
+        break;
+        
+      for (size_t i = 0; i != size; ++i)
+        toHashAsChar[i] = d_powerSymbols[toHashAsCharIndices[i]];
     
       uint h0 = 0x67452301;
       uint h1 = 0xEFCDAB89;
@@ -290,10 +313,40 @@ __global__ void doMD5(float* d_startNumbers, float nIterations, float maxValue, 
       c += h2;
       d += h3;
       
-	    if (a == d_targetDigest[0] && b == d_targetDigest[1] && c == d_targetDigest[2] && d == d_targetDigest[3]){
-	      *d_messageNumber = d_startNumbers[idx] + iterationsDone;
-	      return;
-	    }	
+      if (a == d_targetDigest[0] && b == d_targetDigest[1] && c == d_targetDigest[2] && d == d_targetDigest[3]){
+        *d_messageNumber = 1;
+        
+        for (size_t i = 0; i != size; ++i)
+          message[i] = toHashAsChar[i];
+      }
+      else {
+        size_t i = size - 1;
+        bool incrementNext = true;
+        while (incrementNext) {
+          if (toHashAsCharIndices[i] < (charsetLength - 1)) {
+            ++toHashAsCharIndices[i];
+            incrementNext = false;
+          }
+          else {
+            
+            if (toHashAsCharIndices[i] >= charsetLength) {
+              *d_messageNumber = 3;
+              //break;
+            }
+            
+            
+            toHashAsCharIndices[i] = 0;
+            
+            if (i == 0) {
+              incrementNext = false;
+            }
+            else {
+              --i;
+            }
+          }
+        }
+      }
+      //__syncthreads();
 	  }
 	}
 }
