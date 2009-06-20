@@ -1,4 +1,13 @@
-// MD5_GPU.cu
+/*
+ * File: MD5_GPU.cu 
+ * Authors: Stefano Charissis, Jin-Long Lee and Peter Wong
+ *
+ * Description:
+ * This is the CUDA code. It consists of a kernel, some device functions and helper functions.
+ * The MD5-specific code (eg. most of the #defines) are taken from Ronald Rivests official MD5 implementation.
+/*
+
+
 #include "MD5_GPU.h"
 
 #include <cmath>
@@ -60,6 +69,7 @@ __constant__ float d_powerValues[NUM_POWER_VALUES];
 
 __global__ void doMD5(float*, float, size_t, size_t, float*, uchar*);
 
+// char to uchar conversion
 uchar c2c (char c){
   return (uchar)((c > '9') ? (c - 'a' + 10) : (c - '0'));
 }
@@ -76,14 +86,6 @@ void initialiseGPU(string targetDigest, string targetCharset) {
     h_targetDigest[c/8] = w << 24 | z << 16 | y << 8 | x;
   }
   
-  /*    
-  // abcd is the message.
-  uint h_targetDigest[NUM_DIGEST_SIZE];
-  h_targetDigest[0] = ;
-  h_targetDigest[1] = ;
-  h_targetDigest[2] = ;
-  h_targetDigest[3] = ;
-  */
   // Copy target digest from host to GPU.
   CUDA_SAFE_CALL(cudaMemcpyToSymbol(d_targetDigest, h_targetDigest, 
     NUM_DIGEST_SIZE * sizeof(uint), 0, cudaMemcpyHostToDevice));
@@ -108,11 +110,18 @@ pair<bool, string> findMessage(size_t min, size_t max, size_t charsetLength) {
   bool isFound = false;
   string message;
   
-  int nBlocks = 8;
-  int nThreadsPerBlock = 256;
-  
+  // BlockSize and ThreadPerBlock Configuration
+  // Optimal value pairs are system-dependant
+  // Experimentation is necessary  
+  int nBlocks = 8; //8
+  int nThreadsPerBlock = 256; //256
+  //8 x 256 seems best on my system (256MB 8600GT, E6600)
+
+  // messageNumber; used to indicate a result
   float* d_messageNumber;
-  float h_messageNumber = -1;
+  float h_messageNumber = -1; 
+  
+  //Copy messageNumber from host to device 
   CUDA_SAFE_CALL(cudaMalloc((void**)&d_messageNumber, sizeof(float)));
   CUDA_SAFE_CALL(cudaMemcpy(d_messageNumber, &h_messageNumber, 
     sizeof(float), cudaMemcpyHostToDevice));
@@ -185,7 +194,7 @@ __global__ void doMD5(float* d_startNumbers, float nIterations, size_t charsetLe
   for (size_t i = 0; i != size; ++i)
     toHashAsChar[i] = d_powerSymbols[0];
   
-  // Put the 1 bit.
+  // Put the 1 bit (as per MD5 spec)
   toHashAsChar[size] = 0x80;
   
   float numberToConvert = d_startNumbers[idx];
@@ -196,14 +205,9 @@ __global__ void doMD5(float* d_startNumbers, float nIterations, size_t charsetLe
       toHashAsCharIndices[i] = __float2uint_rz(floorf(numberToConvert / d_powerValues[NUM_POWER_VALUES - size + i]));
       numberToConvert = floorf(fmodf(numberToConvert, d_powerValues[NUM_POWER_VALUES - size + i]));
     }
-    
+    // #pragma unroll is a compiler-based optimisation; loops are unrolled
+    #pragma unroll 3		    
     for (float iterationsDone = 0; iterationsDone != nIterations; ++iterationsDone) {
-      /*
-      for (size_t power = 0; power != size; ++power) {
-        toHashAsChar[power] = d_powerSymbols[__float2uint_rz(floorf(numberToConvert / d_powerValues[NUM_POWER_VALUES - size + power]))];
-        numberToConvert = floorf(fmodf(numberToConvert, d_powerValues[NUM_POWER_VALUES - size + power]));
-      }
-      */
       if (*d_messageNumber == 1)
         break;
         
@@ -313,12 +317,14 @@ __global__ void doMD5(float* d_startNumbers, float nIterations, size_t charsetLe
       c += h2;
       d += h3;
       
+      // Check if this hash is the target hash
       if (a == d_targetDigest[0] && b == d_targetDigest[1] && c == d_targetDigest[2] && d == d_targetDigest[3]){
         *d_messageNumber = 1;
         
         for (size_t i = 0; i != size; ++i)
           message[i] = toHashAsChar[i];
       }
+      // If it's not the hash we're after, create the next permutation/key/message
       else {
         size_t i = size - 1;
         bool incrementNext = true;
@@ -331,9 +337,7 @@ __global__ void doMD5(float* d_startNumbers, float nIterations, size_t charsetLe
             
             if (toHashAsCharIndices[i] >= charsetLength) {
               *d_messageNumber = 3;
-              //break;
             }
-            
             
             toHashAsCharIndices[i] = 0;
             
@@ -346,7 +350,6 @@ __global__ void doMD5(float* d_startNumbers, float nIterations, size_t charsetLe
           }
         }
       }
-      //__syncthreads();
 	  }
 	}
 }
