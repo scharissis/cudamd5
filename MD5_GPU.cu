@@ -5,7 +5,7 @@
  * Description:
  * This is the CUDA code. It consists of a kernel, some device functions and helper functions.
  * The MD5-specific code (eg. most of the #defines) are taken from Ronald Rivests official MD5 implementation.
-/*
+*/
 
 
 #include "MD5_GPU.h"
